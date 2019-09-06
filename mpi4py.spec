@@ -1,3 +1,4 @@
+%global with_openmpi 0
 %global with_mpich 1
 %if 0%{?rhel} && 0%{?rhel} <= 6
 %ifarch ppc64
@@ -31,7 +32,7 @@
 
 Name:           mpi4py
 Version:        3.0.1
-Release:        1%{?commit:.git%{shortcommit}}%{?dist}
+Release:        2%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -46,6 +47,8 @@ Source0:        https://bitbucket.org/mpi4py/mpi4py/downloads/mpi4py-%{version}.
 Patch1:         mpi4py-2.0.0-openmpi-threading.patch
 
 BuildRequires:  python2-devel
+BuildRequires:  environment-modules
+BuildRequires:  ed
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  Cython
 %else
@@ -100,8 +103,10 @@ object as well as optimized communications of Python object exposing the
 single-segment buffer interface (NumPy arrays, built-in bytes/string/array
 objects).
 
+%if %{with_openmpi}
 %package -n python%{python3_pkgversion}-mpi4py-openmpi
 BuildRequires:  openmpi-devel
+BuildRequires:  openmpi-autoload
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python%{python3_pkgversion}-openmpi%{?_isa}
 Summary:        Python %{python3_version} bindings of MPI, Open MPI version
@@ -117,11 +122,13 @@ single-segment buffer interface (NumPy arrays, built-in bytes/string/array
 objects).
 
 This package contains %{name} compiled against Open MPI.
+%endif
 
 
 %if %{with_mpich}
 %package -n python%{python3_pkgversion}-mpi4py-mpich
 BuildRequires:  mpich-devel < 3.3
+BuildRequires:  mpich-autoload < 3.3
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python%{python3_pkgversion}-mpich%{?_isa}
 Summary:        Python %{python3_version} bindings of MPI, MPICH version
@@ -149,8 +156,17 @@ Requires:       %{name}-common = %{version}-%{release}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
+%package tests
+Summary:        Tests for mpi4py packages
+BuildArch:      noarch
+Requires:       mpi4py-runtime = %{version}-%{release}
+%description tests
+This package contains the tests for %{name}.
+
+%if %{with_openmpi}
 %package -n python2-mpi4py-openmpi
 BuildRequires:  openmpi-devel
+BuildRequires:  openmpi-autoload
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python2-openmpi%{?_isa}
 Summary:        Python 2 bindings of MPI, Open MPI version
@@ -169,11 +185,13 @@ single-segment buffer interface (NumPy arrays, built-in bytes/string/array
 objects).
 
 This package contains %{name} compiled against Open MPI.
+%endif
 
 
 %if %{with_mpich}
 %package -n python2-mpi4py-mpich
 BuildRequires:  mpich-devel < 3.3
+BuildRequires:  mpich-autoload < 3.3
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python2-mpich%{?_isa}
 Summary:        Python 2 bindings of MPI, MPICH version
@@ -218,12 +236,14 @@ cp src/mpi4py/__init__.py .__init__openmpi.py
 export CC=mpicc
 export CXX=mpicxx
 
+%if %{with_openmpi}
 # Build OpenMPI version
 %{_openmpi_load}
 cp .__init__openmpi.py src/mpi4py/__init__.py
 %py2_build
 mv build openmpi
 %{_openmpi_unload}
+%endif
 
 %if %{with_mpich}
 # Build mpich version
@@ -239,6 +259,7 @@ mv build mpich
 export CC=mpicc
 export CXX=mpicxx
 
+%if %{with_openmpi}
 # Build OpenMPI version
 %{_openmpi_load}
 cp .__init__openmpi.py src/mpi4py/__init__.py
@@ -246,6 +267,7 @@ mv openmpi build
 %py3_build
 mv build openmpi
 %{_openmpi_unload}
+%endif
 
 %if %{with_mpich}
 # Build mpich version
@@ -261,6 +283,7 @@ mv build mpich
 
 
 %install
+%if %{with_openmpi}
 # Install OpenMPI version
 %{_openmpi_load}
 cp .__init__openmpi.py src/mpi4py/__init__.py
@@ -270,6 +293,7 @@ mkdir -p %{buildroot}%{python2_sitearch}/openmpi
 mv %{buildroot}%{python2_sitearch}/%{name}/ %{buildroot}%{python2_sitearch}/%{name}*.egg-info %{buildroot}%{python2_sitearch}/openmpi
 mv build openmpi
 %{_openmpi_unload}
+%endif
 
 %if %{with_mpich}
 # Install MPICH version
@@ -285,6 +309,7 @@ mv build mpich
 
 
 %if 0%{?with_python3}
+%if %{with_openmpi}
 # Install OpenMPI version
 %{_openmpi_load}
 cp .__init__openmpi.py src/mpi4py/__init__.py
@@ -294,6 +319,7 @@ mkdir -p %{buildroot}%{python3_sitearch}/openmpi
 mv %{buildroot}%{python3_sitearch}/%{name}/ %{buildroot}%{python3_sitearch}/%{name}*.egg-info %{buildroot}%{python3_sitearch}/openmpi
 mv build openmpi
 %{_openmpi_unload}
+%endif
 
 %if %{with_mpich}
 # Install MPICH version
@@ -307,10 +333,26 @@ mv build mpich
 %{_mpich_unload}
 %endif
 
+mkdir -p %{buildroot}/%{python2_sitearch}/%{name}/tests
+install -m 0755 test/test_io.py %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+for file in mpiunittest arrayimpl; do
+    install -m 0644 test/$file.py %{buildroot}/%{python2_sitearch}/%{name}/tests/
+done
+ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+/^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
+            fname="daos:"+fname
+.
+/^    def testReadWriteShared(self):/;/^$/d
+/^    def testIReadIWriteShared(self):/;/^$/d
+/^    def testReadWriteOrdered(self):/;/^$/d
+/^    def testReadWriteOrderedBeginEnd(self):/;/^$/d
+wq
+EOF
 %endif
 
 
 %check
+%if %{with_openmpi}
 # test openmpi?
 %if 0%{?OPENMPI}
 %{_openmpi_load}
@@ -326,6 +368,7 @@ PYTHONPATH=%{buildroot}%{python2_sitearch}/openmpi \
 %endif
 mv build openmpi
 %{_openmpi_unload}
+%endif
 %endif
 
 # test mpich?
@@ -348,6 +391,7 @@ mv build mpich
 %endif
 
 %if 0%{?with_python3}
+%if %{with_openmpi}
 # test openmpi?
 %if 0%{?OPENMPI}
 %{_openmpi_load}
@@ -363,6 +407,7 @@ PYTHONPATH=%{buildroot}%{python3_sitearch}/openmpi \
 %endif
 mv build openmpi
 %{_openmpi_unload}
+%endif
 %endif
 
 # test mpich?
@@ -390,9 +435,14 @@ mv build mpich
 %license LICENSE.rst
 %doc CHANGES.rst DESCRIPTION.rst README.rst
 
+%files tests
+%{python2_sitearch}/%{name}/tests
+
+%if %{with_openmpi}
 %files -n python2-mpi4py-openmpi
 %{python2_sitearch}/openmpi/%{name}-*.egg-info
 %{python2_sitearch}/openmpi/%{name}
+%endif
 
 %if %{with_mpich}
 %files -n python2-mpi4py-mpich
@@ -401,9 +451,11 @@ mv build mpich
 %endif
 
 %if 0%{?with_python3}
+%if %{with_openmpi}
 %files -n python%{python3_pkgversion}-mpi4py-openmpi
 %{python3_sitearch}/openmpi/%{name}-*.egg-info
 %{python3_sitearch}/openmpi/%{name}
+%endif
 
 %if %{with_mpich}
 %files -n python%{python3_pkgversion}-mpi4py-mpich
@@ -417,6 +469,13 @@ mv build mpich
 
 
 %changelog
+* Fri Sep 06 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-2
+- Disable openmpi build
+- Add DAOS test
+- Create tests subpackage
+- BRs environment-modules, {mpich,openmpi}-autoload and ed
+- tests needs to Requires: runtime
+
 * Sat Feb 16 2019 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 3.0.1-1
 - Update to latest bugfix version (#1677683)
 
