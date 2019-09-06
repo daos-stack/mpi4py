@@ -1,0 +1,13 @@
+diff --git a/src/__init__.py b/src/__init__.py
+index 8917831..f0f62b9 100644
+--- a/src/mpi4py/__init__.py
++++ b/src/mpi4py/__init__.py
+@@ -102,7 +102,7 @@ def rc(**kargs):  # pylint: disable=invalid-name
+
+ rc.initialize = True
+ rc.threads = True
+-rc.thread_level = 'multiple'
++rc.thread_level = 'serialized'
+ rc.finalize = None
+ rc.fast_reduce = True
+ rc.recv_mprobe = True
