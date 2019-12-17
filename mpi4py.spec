@@ -121,7 +121,7 @@ This package contains %{name} compiled against Open MPI.
 
 %if %{with_mpich}
 %package -n python%{python3_pkgversion}-mpi4py-mpich
-BuildRequires:  mpich-devel
+BuildRequires:  mpich-devel < 3.3
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python%{python3_pkgversion}-mpich%{?_isa}
 Summary:        Python %{python3_version} bindings of MPI, MPICH version
@@ -173,7 +173,7 @@ This package contains %{name} compiled against Open MPI.
 
 %if %{with_mpich}
 %package -n python2-mpi4py-mpich
-BuildRequires:  mpich-devel
+BuildRequires:  mpich-devel < 3.3
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python2-mpich%{?_isa}
 Summary:        Python 2 bindings of MPI, MPICH version
