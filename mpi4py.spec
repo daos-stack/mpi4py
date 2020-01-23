@@ -10,6 +10,16 @@
 %endif
 
 %global with_python3 1
+%if (0%{?suse_version} >= 1500)
+%global python3_pkgversion 3
+%global _mpich_load \
+ . /etc/profile.d/modules.sh; \
+ module load gnu-mpich/3.3; \
+ export CFLAGS="$CFLAGS %{optflags}";
+%global _mpich_unload \
+ . /etc/profile.d/modules.sh; \
+ module unload gnu-mpich/3.3;
+%endif
 
 ### TESTSUITE ###
 # The testsuite currently fails only on the buildsystem, but works localy.
@@ -35,7 +45,7 @@
 
 Name:           mpi4py
 Version:        3.0.1
-Release:        3%{?commit:.git%{shortcommit}}%{?dist}
+Release:        4%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -50,7 +60,11 @@ Source0:        https://bitbucket.org/mpi4py/mpi4py/downloads/mpi4py-%{version}.
 Patch1:         mpi4py-2.0.0-openmpi-threading.patch
 
 BuildRequires:  python2-devel
-BuildRequires:  environment-modules
+%if (0%{?suse_version} >= 1500)
+BuildRequires: Modules
+%else
+BuildRequires: environment-modules
+%endif
 BuildRequires:  ed
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  Cython
@@ -110,7 +124,6 @@ objects).
 %if %{with_openmpi}
 %package -n python%{python3_pkgversion}-mpi4py-openmpi
 BuildRequires:  openmpi-devel
-BuildRequires:  openmpi-autoload
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python%{python3_pkgversion}-openmpi%{?_isa}
 Summary:        Python %{python3_version} bindings of MPI, Open MPI version
@@ -132,7 +145,6 @@ This package contains %{name} compiled against Open MPI.
 %if %{with_mpich}
 %package -n python%{python3_pkgversion}-mpi4py-mpich
 BuildRequires:  mpich-devel
-BuildRequires:  mpich-autoload
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python%{python3_pkgversion}-mpich%{?_isa}
 Summary:        Python %{python3_version} bindings of MPI, MPICH version
@@ -172,7 +184,6 @@ This package contains the tests for %{name}.
 %if %{with_openmpi}
 %package -n python2-mpi4py-openmpi
 BuildRequires:  openmpi-devel
-BuildRequires:  openmpi-autoload
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python2-openmpi%{?_isa}
 Summary:        Python 2 bindings of MPI, Open MPI version
@@ -197,7 +208,6 @@ This package contains %{name} compiled against Open MPI.
 %if %{with_mpich}
 %package -n python2-mpi4py-mpich
 BuildRequires:  mpich-devel
-BuildRequires:  mpich-autoload
 Requires:       %{name}-common = %{version}-%{release}
 Requires:       python2-mpich%{?_isa}
 Summary:        Python 2 bindings of MPI, MPICH version
@@ -475,6 +485,9 @@ mv build mpich
 
 
 %changelog
+* Thu Jan 23 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-4
+- Build on Leap 15.1
+
 * Sun Dec 29 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-3
 - Add Provides: %{name}-cart-%{cart_major}-daos-%{daos_major}
 
