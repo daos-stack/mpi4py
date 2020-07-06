@@ -13,12 +13,10 @@
 %if (0%{?suse_version} >= 1500)
 %global python3_pkgversion 3
 %global _mpich_load \
- . /etc/profile.d/modules.sh; \
- module load gnu-mpich/3.3; \
+ module load gnu-mpich; \
  export CFLAGS="$CFLAGS %{optflags}";
 %global _mpich_unload \
- . /etc/profile.d/modules.sh; \
- module unload gnu-mpich/3.3;
+ module unload gnu-mpich;
 %endif
 
 ### TESTSUITE ###
@@ -44,8 +42,8 @@
 %{?commit:%global shortcommit %(c=%{commit}; echo ${c:0:12})}
 
 Name:           mpi4py
-Version:        3.0.1
-Release:        4%{?commit:.git%{shortcommit}}%{?dist}
+Version:        3.0.3
+Release:        1%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -61,7 +59,7 @@ Patch1:         mpi4py-2.0.0-openmpi-threading.patch
 
 BuildRequires:  python2-devel
 %if (0%{?suse_version} >= 1500)
-BuildRequires: Modules
+BuildRequires: lua-lmod
 %else
 BuildRequires: environment-modules
 %endif
@@ -163,7 +161,7 @@ objects).
 
 This package contains %{name} compiled against MPICH.
 %endif
-%endif # with_python3
+%endif
 
 %package common
 Summary:        Common files for mpi4py packages
@@ -209,7 +207,9 @@ This package contains %{name} compiled against Open MPI.
 %package -n python2-mpi4py-mpich
 BuildRequires:  mpich-devel
 Requires:       %{name}-common = %{version}-%{release}
+%if 0%{?rhel} >= 7
 Requires:       python2-mpich%{?_isa}
+%endif
 Summary:        Python 2 bindings of MPI, MPICH version
 Provides:       mpi4py-runtime = %{version}-%{release}
 Provides:       %{name}-mpich2 = %{version}-%{release}
@@ -443,8 +443,8 @@ PYTHONPATH=%{buildroot}%{python3_sitearch}/mpich \
 mv build mpich
 %{_mpich_unload}
 %endif
-%endif # mpich disable
-%endif # with_python3
+%endif
+%endif
 
 
 %files common
@@ -478,13 +478,19 @@ mv build mpich
 %{python3_sitearch}/mpich/%{name}-*.egg-info
 %{python3_sitearch}/mpich/%{name}
 %endif
-%endif  # with_python3
+%endif
 
 %files docs
 %doc docs/* demo
 
 
 %changelog
+* Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
+- Update to new release
+
+* Fri Jun 19 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-5
+- Fix build on Leap 15.1
+
 * Thu Jan 23 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-4
 - Build on Leap 15.1
 
