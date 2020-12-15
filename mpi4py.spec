@@ -1,5 +1,11 @@
-%global cart_major 4
-%global daos_major 0
+%global daos_major 1
+
+%if (0%{?suse_version} >= 1500)
+%global module_load() \
+ MODULEPATH=/usr/share/modules module load gnu-%{1}; \
+ export CFLAGS="$CFLAGS %{optflags}";
+%global module_unload() MODULEPATH=/usr/share/modules module unload gnu-%{1}
+%endif
 
 %global with_openmpi 0
 %global with_mpich 1
@@ -12,11 +18,10 @@
 %global with_python3 1
 %if (0%{?suse_version} >= 1500)
 %global python3_pkgversion 3
-%global _mpich_load \
- module load gnu-mpich; \
- export CFLAGS="$CFLAGS %{optflags}";
-%global _mpich_unload \
- module unload gnu-mpich;
+%global _mpich_load %module_load mpich
+%global _mpich_unload %module_unload mpich
+%else
+%global python3_pkgversion 36
 %endif
 
 ### TESTSUITE ###
@@ -43,7 +48,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        1%{?commit:.git%{shortcommit}}%{?dist}
+Release:        2%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -73,7 +78,7 @@ BuildRequires:  python2-Cython >= 0.22
 BuildRequires:  python%{python3_pkgversion}-devel
 BuildRequires:  python%{python3_pkgversion}-Cython >= 0.22
 %endif
-Provides:       %{name}-cart-%{cart_major}-daos-%{daos_major}
+Provides:       %{name}-daos-%{daos_major}
 
 
 %description
@@ -167,7 +172,7 @@ This package contains %{name} compiled against MPICH.
 Summary:        Common files for mpi4py packages
 BuildArch:      noarch
 Requires:       %{name}-common = %{version}-%{release}
-Provides:       %{name}-common-cart-%{cart_major}-daos-%{daos_major}
+Provides:       %{name}-common-daos-%{daos_major}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
@@ -175,7 +180,7 @@ This package contains the license file shard between the subpackages of %{name}.
 Summary:        Tests for mpi4py packages
 BuildArch:      noarch
 Requires:       mpi4py-runtime = %{version}-%{release}
-Provides:       %{name}-tests-cart-%{cart_major}-daos-%{daos_major}
+Provides:       %{name}-tests-daos-%{daos_major}
 %description tests
 This package contains the tests for %{name}.
 
@@ -485,6 +490,9 @@ mv build mpich
 
 
 %changelog
+* Mon Dec 14 2020 Kenneth Cain <kenneth.c.cain@intel.com> - 3.0.3-2
+- Update for libdaos.so.1 major API version bump
+
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
 
