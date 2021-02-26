@@ -10,8 +10,8 @@
 %endif
 
 %global with_python3 1
-%if (0%{?suse_version} >= 1500)
 %global python3_pkgversion 3
+%if (0%{?suse_version} >= 1500)
 %global _mpich_load \
  module load gnu-mpich; \
  export CFLAGS="$CFLAGS %{optflags}";
@@ -43,7 +43,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        1%{?commit:.git%{shortcommit}}%{?dist}
+Release:        2%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -161,6 +161,15 @@ objects).
 
 This package contains %{name} compiled against MPICH.
 %endif
+
+%package -n python%{python3_pkgversion}-mpi4py-tests
+Summary:        Tests for mpi4py packages
+BuildArch:      noarch
+Requires:       python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
+Provides:       python%{python3_pkgversion}-%{name}-tests
+%{?python_provide:%python_provide python3-mpi4py-tests}
+%description -n python%{python3_pkgversion}-mpi4py-tests
+This package contains the tests for %{name}.
 %endif
 
 %package common
@@ -323,6 +332,21 @@ mv build mpich
 %{_mpich_unload}
 %endif
 
+mkdir -p %{buildroot}/%{python2_sitearch}/%{name}/tests
+install -m 0755 test/test_io.py %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+for file in mpiunittest arrayimpl; do
+    install -m 0644 test/$file.py %{buildroot}/%{python2_sitearch}/%{name}/tests/
+done
+ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+/^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
+            fname="daos:"+fname
+.
+/^    def testReadWriteShared(self):/;/^$/d
+/^    def testIReadIWriteShared(self):/;/^$/d
+/^    def testReadWriteOrdered(self):/;/^$/d
+/^    def testReadWriteOrderedBeginEnd(self):/;/^$/d
+wq
+EOF
 
 %if 0%{?with_python3}
 %if %{with_openmpi}
@@ -349,12 +373,12 @@ mv build mpich
 %{_mpich_unload}
 %endif
 
-mkdir -p %{buildroot}/%{python2_sitearch}/%{name}/tests
-install -m 0755 test/test_io.py %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+mkdir -p %{buildroot}/%{python3_sitearch}/%{name}/tests
+install -m 0755 test/test_io.py %{buildroot}/%{python3_sitearch}/%{name}/tests/test_io_daos.py
 for file in mpiunittest arrayimpl; do
-    install -m 0644 test/$file.py %{buildroot}/%{python2_sitearch}/%{name}/tests/
+    install -m 0644 test/$file.py %{buildroot}/%{python3_sitearch}/%{name}/tests/
 done
-ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+ed <<EOF %{buildroot}/%{python3_sitearch}/%{name}/tests/test_io_daos.py
 /^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
             fname="daos:"+fname
 .
@@ -365,87 +389,6 @@ ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
 wq
 EOF
 %endif
-
-
-%check
-%if %{with_openmpi}
-# test openmpi?
-%if 0%{?OPENMPI}
-%{_openmpi_load}
-cp .__init__openmpi.py src/mpi4py/__init__.py
-mv openmpi build
-PYTHONPATH=%{buildroot}%{python2_sitearch}/openmpi \
-    mpiexec -n 1 python2 test/runtests.py -v --no-builddir --thread-level=serialized -e spawn
-%if 0%{?FULLTESTS}
-PYTHONPATH=%{buildroot}%{python2_sitearch}/openmpi \
-    mpiexec -n 5 python2 test/runtests.py -v --no-builddir -e spawn
-PYTHONPATH=%{buildroot}%{python2_sitearch}/openmpi \
-    mpiexec -n 8 python2 test/runtests.py -v --no-builddir -e spawn
-%endif
-mv build openmpi
-%{_openmpi_unload}
-%endif
-%endif
-
-# test mpich?
-%if 0%{?MPICH}
-%if %{with_mpich}
-%{_mpich_load}
-cp .__init__mpich.py src/mpi4py/__init__.py
-mv mpich build
-PYTHONPATH=%{buildroot}%{python2_sitearch}/mpich \
-    mpiexec -n 1 python2 test/runtests.py -v --no-builddir -e spawn
-%if 0%{?FULLTESTS}
-PYTHONPATH=%{buildroot}%{python2_sitearch}/mpich \
-    mpiexec -n 5 python2 test/runtests.py -v --no-builddir -e spawn
-PYTHONPATH=%{buildroot}%{python2_sitearch}/mpich \
-    mpiexec -n 8 python2 test/runtests.py -v --no-builddir -e spawn
-%endif
-mv build mpich
-%{_mpich_unload}
-%endif
-%endif
-
-%if 0%{?with_python3}
-%if %{with_openmpi}
-# test openmpi?
-%if 0%{?OPENMPI}
-%{_openmpi_load}
-cp .__init__openmpi.py src/mpi4py/__init__.py
-mv openmpi build
-PYTHONPATH=%{buildroot}%{python3_sitearch}/openmpi \
-    mpiexec -np 1 python3 test/runtests.py -v --no-builddir --thread-level=serialized -e spawn
-%if 0%{?FULLTESTS}
-PYTHONPATH=%{buildroot}%{python3_sitearch}/openmpi \
-    mpiexec -np 5 python3 test/runtests.py -v --no-builddir -e spawn
-PYTHONPATH=%{buildroot}%{python3_sitearch}/openmpi \
-    mpiexec -np 8 python3 test/runtests.py -v --no-builddir -e spawn
-%endif
-mv build openmpi
-%{_openmpi_unload}
-%endif
-%endif
-
-# test mpich?
-%if 0%{?MPICH}
-%if %{with_mpich}
-%{_mpich_load}
-cp .__init__mpich.py src/mpi4py/__init__.py
-mv mpich build
-PYTHONPATH=%{buildroot}%{python3_sitearch}/mpich \
-    mpiexec -np 1 python3 test/runtests.py -v --no-builddir -e spawn
-%if 0%{?FULLTESTS}
-PYTHONPATH=%{buildroot}%{python3_sitearch}/mpich \
-    mpiexec -np 5 python3 test/runtests.py -v --no-builddir -e spawn
-PYTHONPATH=%{buildroot}%{python3_sitearch}/mpich \
-    mpiexec -np 8 python3 test/runtests.py -v --no-builddir -e spawn
-%endif
-mv build mpich
-%{_mpich_unload}
-%endif
-%endif
-%endif
-
 
 %files common
 %license LICENSE.rst
@@ -467,6 +410,10 @@ mv build mpich
 %endif
 
 %if 0%{?with_python3}
+
+%files -n python%{python3_pkgversion}-%{name}-tests
+%{python3_sitearch}/%{name}/tests
+
 %if %{with_openmpi}
 %files -n python%{python3_pkgversion}-mpi4py-openmpi
 %{python3_sitearch}/openmpi/%{name}-*.egg-info
@@ -485,6 +432,9 @@ mv build mpich
 
 
 %changelog
+* Fri Feb 26 2021 Maureen Jean maureen.jean@intel.com> - 3.0.3-2
+- Create a python3 test package
+
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
 
