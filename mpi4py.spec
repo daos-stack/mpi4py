@@ -162,13 +162,13 @@ objects).
 This package contains %{name} compiled against MPICH.
 %endif
 
-%package -n python3-mpi4py-tests
+%package -n python%{python3_pkgversion}-mpi4py-tests
 Summary:        Tests for mpi4py packages
 BuildArch:      noarch
 Requires:       python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
 Provides:       python%{python3_pkgversion}-%{name}-tests
 %{?python_provide:%python_provide python3-mpi4py-tests}
-%description -n python3-mpi4py-tests
+%description -n python%{python3_pkgversion}-mpi4py-tests
 This package contains the tests for %{name}.
 %endif
 
