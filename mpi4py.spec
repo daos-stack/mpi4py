@@ -180,13 +180,12 @@ Provides:       %{name}-common-cart-%{cart_major}-daos-%{daos_major}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
-%package -n python2-mpi4py-tests
+%package tests
 Summary:        Tests for mpi4py packages
 BuildArch:      noarch
 Requires:       mpi4py-runtime = %{version}-%{release}
-Provides:       python%{python2_pkgversion}-%{name}-tests
-%{?python_provide:%python_provide python2-mpi4py-tests}
-%description -n python2-mpi4py-tests
+Provides:       %{name}-tests-cart-%{cart_major}-daos-%{daos_major}
+%description tests
 This package contains the tests for %{name}.
 
 %if %{with_openmpi}
@@ -476,7 +475,7 @@ mv build mpich
 %license LICENSE.rst
 %doc CHANGES.rst DESCRIPTION.rst README.rst
 
-%files python%{python2_pkgversion}-%{name}-tests
+%files tests
 %{python2_sitearch}/%{name}/tests
 
 %if %{with_openmpi}
