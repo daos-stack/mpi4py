@@ -1,6 +1,3 @@
-%global cart_major 4
-%global daos_major 0
-
 %global with_openmpi 0
 %global with_mpich 1
 %if 0%{?rhel} && 0%{?rhel} <= 6
@@ -43,7 +40,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        1%{?commit:.git%{shortcommit}}%{?dist}
+Release:        2%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -73,7 +70,6 @@ BuildRequires:  python2-Cython >= 0.22
 BuildRequires:  python%{python3_pkgversion}-devel
 BuildRequires:  python%{python3_pkgversion}-Cython >= 0.22
 %endif
-Provides:       %{name}-cart-%{cart_major}-daos-%{daos_major}
 
 
 %description
@@ -167,7 +163,6 @@ This package contains %{name} compiled against MPICH.
 Summary:        Common files for mpi4py packages
 BuildArch:      noarch
 Requires:       %{name}-common = %{version}-%{release}
-Provides:       %{name}-common-cart-%{cart_major}-daos-%{daos_major}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
@@ -175,7 +170,6 @@ This package contains the license file shard between the subpackages of %{name}.
 Summary:        Tests for mpi4py packages
 BuildArch:      noarch
 Requires:       mpi4py-runtime = %{version}-%{release}
-Provides:       %{name}-tests-cart-%{cart_major}-daos-%{daos_major}
 %description tests
 This package contains the tests for %{name}.
 
@@ -485,6 +479,9 @@ mv build mpich
 
 
 %changelog
+* Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
+- Remove virtual provides
+
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
 
