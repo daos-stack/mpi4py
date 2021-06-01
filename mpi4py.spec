@@ -16,6 +16,14 @@
  module unload gnu-mpich;
 %endif
 
+%if 0%{?rhel} >= 8
+%global python_tests_sitearch %{python3_sitearch}
+%global python_runtime python3-mpi4py-runtime = %{version}-%{release}
+%else
+%global python_tests_sitearch %{python2_sitearch}
+%global python_runtime mpi4py-runtime = %{version}-%{release}
+%endif
+
 ### TESTSUITE ###
 # The testsuite currently fails only on the buildsystem, but works localy.
 # So to easily enable/disable the testsuite, the following variables are
@@ -25,9 +33,8 @@
 # * OPENMPI:   if '1' enable openmpi
 %ifarch %{arm}
 # Disable tests on arm until upstream bug is fixed:
-# https://bitbucket.org/mpi4py/mpi4py/issues/29/get_address-fails-on-arm
+# https://bitbucket.org/mpi4py/mpi4py/issues/145
 %global MPICH 0
-%global OPENMPI 0
 %else
 %global MPICH 1
 %global OPENMPI 1
@@ -169,7 +176,7 @@ This package contains the license file shard between the subpackages of %{name}.
 %package tests
 Summary:        Tests for mpi4py packages
 BuildArch:      noarch
-Requires:       mpi4py-runtime = %{version}-%{release}
+Requires:       %{python_runtime}
 %description tests
 This package contains the tests for %{name}.
 
@@ -343,12 +350,12 @@ mv build mpich
 %{_mpich_unload}
 %endif
 
-mkdir -p %{buildroot}/%{python2_sitearch}/%{name}/tests
-install -m 0755 test/test_io.py %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+mkdir -p %{buildroot}/%{python_tests_sitearch}/%{name}/tests
+install -m 0755 test/test_io.py %{buildroot}/%{python_tests_sitearch}/%{name}/tests/test_io_daos.py
 for file in mpiunittest arrayimpl; do
-    install -m 0644 test/$file.py %{buildroot}/%{python2_sitearch}/%{name}/tests/
+    install -m 0644 test/$file.py %{buildroot}/%{python_tests_sitearch}/%{name}/tests/
 done
-ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+ed <<EOF %{buildroot}/%{python_tests_sitearch}/%{name}/tests/test_io_daos.py
 /^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
             fname="daos:"+fname
 .
@@ -446,7 +453,7 @@ mv build mpich
 %doc CHANGES.rst DESCRIPTION.rst README.rst
 
 %files tests
-%{python2_sitearch}/%{name}/tests
+%{python_tests_sitearch}/%{name}/tests
 
 %if %{with_openmpi}
 %files -n python2-mpi4py-openmpi
@@ -481,6 +488,7 @@ mv build mpich
 %changelog
 * Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
 - Remove virtual provides
+- Use python3 for EL8 tests
 
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
