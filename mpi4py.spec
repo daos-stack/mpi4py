@@ -16,9 +16,9 @@
  module unload gnu-mpich;
 %endif
 
-%if 0%{?rhel} >= 8
+%if 0%{?rhel} >= 7
 %global python_tests_sitearch %{python3_sitearch}
-%global python_runtime python3-mpi4py-runtime = %{version}-%{release}
+%global python_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
 %else
 %global python_tests_sitearch %{python2_sitearch}
 %global python_runtime mpi4py-runtime = %{version}-%{release}
