@@ -147,7 +147,9 @@ This package contains %{name} compiled against Open MPI.
 %package -n python%{python3_pkgversion}-mpi4py-mpich
 BuildRequires:  mpich-devel
 Requires:       %{name}-common = %{version}-%{release}
+%if 0%{?rhel} >= 7
 Requires:       python%{python3_pkgversion}-mpich%{?_isa}
+%endif
 Summary:        Python %{python3_version} bindings of MPI, MPICH version
 Provides:       python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
 Provides:       python%{python3_pkgversion}-%{name}-mpich2 = %{version}-%{release}
