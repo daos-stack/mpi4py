@@ -16,7 +16,7 @@
  module unload gnu-mpich;
 %endif
 
-%if 0%{?rhel} >= 7
+%if 0%{?rhel} >= 7 || (0%{?suse_version} >= 1500)
 %global python_tests_sitearch %{python3_sitearch}
 %global python_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
 %else
@@ -488,7 +488,7 @@ mv build mpich
 %changelog
 * Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
 - Remove virtual provides
-- Use python3 for EL8 tests
+- Use python3 for tests
 
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
