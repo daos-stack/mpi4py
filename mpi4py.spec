@@ -16,13 +16,8 @@
  module unload gnu-mpich;
 %endif
 
-%if 0%{?rhel} >= 7 || (0%{?suse_version} >= 1500)
-%global python_tests_sitearch %{python3_sitearch}
-%global python_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
-%else
-%global python_tests_sitearch %{python2_sitearch}
-%global python_runtime mpi4py-runtime = %{version}-%{release}
-%endif
+%global python3_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
+%global python2_runtime mpi4py-runtime = %{version}-%{release}
 
 ### TESTSUITE ###
 # The testsuite currently fails only on the buildsystem, but works localy.
@@ -175,12 +170,20 @@ Requires:       %{name}-common = %{version}-%{release}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
-%package tests
-Summary:        Tests for mpi4py packages
+%package -n python2-mpi4py-tests
+Summary:        Python 2 tests for mpi4py packages
 BuildArch:      noarch
-Requires:       %{python_runtime}
-%description tests
-This package contains the tests for %{name}.
+Requires:       %{python2_runtime}
+Provides:       %{name}-tests
+%description -n python2-mpi4py-tests
+This package contains the Python 2 tests for %{name}.
+
+%package -n python%{python3_pkgversion}-mpi4py-tests
+Summary:        Python 3 tests for mpi4py packages
+BuildArch:      noarch
+Requires:       %{python3_runtime}
+%description -n python%{python3_pkgversion}-mpi4py-tests
+This package contains the Python 3 tests for %{name}.
 
 %if %{with_openmpi}
 %package -n python2-mpi4py-openmpi
@@ -352,12 +355,13 @@ mv build mpich
 %{_mpich_unload}
 %endif
 
-mkdir -p %{buildroot}/%{python_tests_sitearch}/%{name}/tests
-install -m 0755 test/test_io.py %{buildroot}/%{python_tests_sitearch}/%{name}/tests/test_io_daos.py
-for file in mpiunittest arrayimpl; do
-    install -m 0644 test/$file.py %{buildroot}/%{python_tests_sitearch}/%{name}/tests/
-done
-ed <<EOF %{buildroot}/%{python_tests_sitearch}/%{name}/tests/test_io_daos.py
+for py_site_arch in %{python2_sitearch} %{python3_sitearch}; do
+    mkdir -p %{buildroot}/$py_site_arch/%{name}/tests
+    install -m 0755 test/test_io.py %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
+    for file in mpiunittest arrayimpl; do
+        install -m 0644 test/$file.py %{buildroot}/$py_site_arch/%{name}/tests/
+    done
+    ed <<EOF %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
 /^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
             fname="daos:"+fname
 .
@@ -367,6 +371,7 @@ ed <<EOF %{buildroot}/%{python_tests_sitearch}/%{name}/tests/test_io_daos.py
 /^    def testReadWriteOrderedBeginEnd(self):/;/^$/d
 wq
 EOF
+done
 %endif
 
 
@@ -454,8 +459,11 @@ mv build mpich
 %license LICENSE.rst
 %doc CHANGES.rst DESCRIPTION.rst README.rst
 
-%files tests
-%{python_tests_sitearch}/%{name}/tests
+%files -n python2-mpi4py-tests
+%{python2_sitearch}/%{name}/tests
+
+%files -n python%{python3_pkgversion}-mpi4py-tests
+%{python3_sitearch}/%{name}/tests
 
 %if %{with_openmpi}
 %files -n python2-mpi4py-openmpi
@@ -490,7 +498,7 @@ mv build mpich
 %changelog
 * Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
 - Remove virtual provides
-- Use python3 for tests
+- Package tests for both Python 2 and 3
 
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
