@@ -174,7 +174,8 @@ This package contains the license file shard between the subpackages of %{name}.
 Summary:        Python 2 tests for mpi4py packages
 BuildArch:      noarch
 Requires:       %{python2_runtime}
-Provides:       %{name}-tests
+Provides:       %{name}-tests = %{version}-%{release}
+Obsoletes:      %{name}-tests < %{version}-%{release}
 %description -n python2-mpi4py-tests
 This package contains the Python 2 tests for %{name}.
 
