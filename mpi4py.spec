@@ -1,6 +1,3 @@
-%global cart_major 4
-%global daos_major 0
-
 %global with_openmpi 0
 %global with_mpich 1
 %if 0%{?rhel} && 0%{?rhel} <= 6
@@ -19,6 +16,9 @@
  module unload gnu-mpich;
 %endif
 
+%global python3_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
+%global python2_runtime mpi4py-runtime = %{version}-%{release}
+
 ### TESTSUITE ###
 # The testsuite currently fails only on the buildsystem, but works localy.
 # So to easily enable/disable the testsuite, the following variables are
@@ -28,9 +28,8 @@
 # * OPENMPI:   if '1' enable openmpi
 %ifarch %{arm}
 # Disable tests on arm until upstream bug is fixed:
-# https://bitbucket.org/mpi4py/mpi4py/issues/29/get_address-fails-on-arm
+# https://bitbucket.org/mpi4py/mpi4py/issues/145
 %global MPICH 0
-%global OPENMPI 0
 %else
 %global MPICH 1
 %global OPENMPI 1
@@ -43,7 +42,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        1%{?commit:.git%{shortcommit}}%{?dist}
+Release:        2%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -73,7 +72,6 @@ BuildRequires:  python2-Cython >= 0.22
 BuildRequires:  python%{python3_pkgversion}-devel
 BuildRequires:  python%{python3_pkgversion}-Cython >= 0.22
 %endif
-Provides:       %{name}-cart-%{cart_major}-daos-%{daos_major}
 
 
 %description
@@ -144,7 +142,9 @@ This package contains %{name} compiled against Open MPI.
 %package -n python%{python3_pkgversion}-mpi4py-mpich
 BuildRequires:  mpich-devel
 Requires:       %{name}-common = %{version}-%{release}
+%if 0%{?rhel} >= 7
 Requires:       python%{python3_pkgversion}-mpich%{?_isa}
+%endif
 Summary:        Python %{python3_version} bindings of MPI, MPICH version
 Provides:       python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
 Provides:       python%{python3_pkgversion}-%{name}-mpich2 = %{version}-%{release}
@@ -167,17 +167,24 @@ This package contains %{name} compiled against MPICH.
 Summary:        Common files for mpi4py packages
 BuildArch:      noarch
 Requires:       %{name}-common = %{version}-%{release}
-Provides:       %{name}-common-cart-%{cart_major}-daos-%{daos_major}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
-%package tests
-Summary:        Tests for mpi4py packages
+%package -n python2-mpi4py-tests
+Summary:        Python 2 tests for mpi4py packages
 BuildArch:      noarch
-Requires:       mpi4py-runtime = %{version}-%{release}
-Provides:       %{name}-tests-cart-%{cart_major}-daos-%{daos_major}
-%description tests
-This package contains the tests for %{name}.
+Requires:       %{python2_runtime}
+Provides:       %{name}-tests = %{version}-%{release}
+Obsoletes:      %{name}-tests < %{version}-%{release}
+%description -n python2-mpi4py-tests
+This package contains the Python 2 tests for %{name}.
+
+%package -n python%{python3_pkgversion}-mpi4py-tests
+Summary:        Python 3 tests for mpi4py packages
+BuildArch:      noarch
+Requires:       %{python3_runtime}
+%description -n python%{python3_pkgversion}-mpi4py-tests
+This package contains the Python 3 tests for %{name}.
 
 %if %{with_openmpi}
 %package -n python2-mpi4py-openmpi
@@ -349,12 +356,13 @@ mv build mpich
 %{_mpich_unload}
 %endif
 
-mkdir -p %{buildroot}/%{python2_sitearch}/%{name}/tests
-install -m 0755 test/test_io.py %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
-for file in mpiunittest arrayimpl; do
-    install -m 0644 test/$file.py %{buildroot}/%{python2_sitearch}/%{name}/tests/
-done
-ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
+for py_site_arch in %{python2_sitearch} %{python3_sitearch}; do
+    mkdir -p %{buildroot}/$py_site_arch/%{name}/tests
+    install -m 0755 test/test_io.py %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
+    for file in mpiunittest arrayimpl; do
+        install -m 0644 test/$file.py %{buildroot}/$py_site_arch/%{name}/tests/
+    done
+    ed <<EOF %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
 /^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
             fname="daos:"+fname
 .
@@ -364,6 +372,7 @@ ed <<EOF %{buildroot}/%{python2_sitearch}/%{name}/tests/test_io_daos.py
 /^    def testReadWriteOrderedBeginEnd(self):/;/^$/d
 wq
 EOF
+done
 %endif
 
 
@@ -451,8 +460,11 @@ mv build mpich
 %license LICENSE.rst
 %doc CHANGES.rst DESCRIPTION.rst README.rst
 
-%files tests
+%files -n python2-mpi4py-tests
 %{python2_sitearch}/%{name}/tests
+
+%files -n python%{python3_pkgversion}-mpi4py-tests
+%{python3_sitearch}/%{name}/tests
 
 %if %{with_openmpi}
 %files -n python2-mpi4py-openmpi
@@ -485,6 +497,10 @@ mv build mpich
 
 
 %changelog
+* Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
+- Remove virtual provides
+- Package tests for both Python 2 and 3
+
 * Thu Jun 25 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-1
 - Update to new release
 

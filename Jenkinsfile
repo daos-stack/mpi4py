@@ -41,4 +41,4 @@
 //@Library(value="pipeline-lib@your_branch") _
 
 // needs porting to Leap 15.1
-packageBuildingPipeline(['distros' : ['centos7', 'leap15']])
+packageBuildingPipeline(['distros' : ['centos7', 'centos8', 'leap15']])
