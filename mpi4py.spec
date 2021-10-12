@@ -363,8 +363,14 @@ for py_site_arch in %{python2_sitearch} %{python3_sitearch}; do
         install -m 0644 test/$file.py %{buildroot}/$py_site_arch/%{name}/tests/
     done
     ed <<EOF %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
-/^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
-            fname="daos:"+fname
+/^ import arrayimpl/a
+ import uuid
+/^         if comm.Get_rank() == 0:/a
+            fname = str(uuid.uuid4())
+            fname = "daos:/"+self.prefix+fname
+.
+/^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/;/^$/d
+/^            os.close(fd)/;/^$/d
 .
 /^    def testReadWriteShared(self):/;/^$/d
 /^    def testIReadIWriteShared(self):/;/^$/d
