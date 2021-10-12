@@ -42,7 +42,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        2%{?commit:.git%{shortcommit}}%{?dist}
+Release:        3%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -140,6 +140,7 @@ This package contains %{name} compiled against Open MPI.
 
 %if %{with_mpich}
 %package -n python%{python3_pkgversion}-mpi4py-mpich
+BuildRequires:  libfabric-devel
 BuildRequires:  mpich-devel
 Requires:       %{name}-common = %{version}-%{release}
 %if 0%{?rhel} >= 7
@@ -503,6 +504,10 @@ mv build mpich
 
 
 %changelog
+* Tue Oct 12 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.0.3-3
+- add BR libfabric-devel
+- update patch for DAOS test to remove temp dir
+
 * Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
 - Remove virtual provides
 - Package tests for both Python 2 and 3
