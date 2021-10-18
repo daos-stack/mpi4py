@@ -140,7 +140,6 @@ This package contains %{name} compiled against Open MPI.
 
 %if %{with_mpich}
 %package -n python%{python3_pkgversion}-mpi4py-mpich
-BuildRequires:  libfabric-devel
 BuildRequires:  mpich-devel
 Requires:       %{name}-common = %{version}-%{release}
 %if 0%{?rhel} >= 7
@@ -505,7 +504,6 @@ mv build mpich
 
 %changelog
 * Tue Oct 12 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.0.3-3
-- add BR libfabric-devel
 - update patch for DAOS test to remove temp dir
 
 * Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
