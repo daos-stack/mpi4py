@@ -42,7 +42,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        2%{?commit:.git%{shortcommit}}%{?dist}
+Release:        3%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -363,9 +363,15 @@ for py_site_arch in %{python2_sitearch} %{python3_sitearch}; do
         install -m 0644 test/$file.py %{buildroot}/$py_site_arch/%{name}/tests/
     done
     ed <<EOF %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
-/^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/a
-            fname="daos:"+fname
+/^import arrayimpl/a
+import uuid
 .
+/^        if comm.Get_rank() == 0:/a
+            fname = str(uuid.uuid4())
+            fname = "daos:/"+self.prefix+fname
+.
+/^            fd, fname = tempfile.mkstemp(prefix=self.prefix)/d
+/^            os.close(fd)/d
 /^    def testReadWriteShared(self):/;/^$/d
 /^    def testIReadIWriteShared(self):/;/^$/d
 /^    def testReadWriteOrdered(self):/;/^$/d
@@ -497,6 +503,9 @@ mv build mpich
 
 
 %changelog
+* Tue Oct 12 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.0.3-3
+- update patch for DAOS test to remove temp dir
+
 * Mon May 31 2021 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-2
 - Remove virtual provides
 - Package tests for both Python 2 and 3
