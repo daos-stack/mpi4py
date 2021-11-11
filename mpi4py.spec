@@ -42,7 +42,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        3%{?commit:.git%{shortcommit}}%{?dist}
+Release:        4%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -503,6 +503,9 @@ mv build mpich
 
 
 %changelog
+* Fri Nov 12 2021 Wang Shilong <shilong.wang@intel.com> 3.0.3-4
+- Rebuilt for breaking DAOS API change
+
 * Tue Oct 12 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.0.3-3
 - update patch for DAOS test to remove temp dir
 
