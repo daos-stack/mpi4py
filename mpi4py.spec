@@ -10,10 +10,10 @@
 %if (0%{?suse_version} >= 1500)
 %global python3_pkgversion 3
 %global _mpich_load \
- module load gnu-mpich; \
+ MODULEPATH=/usr/share/modules module load gnu-mpich; \
  export CFLAGS="$CFLAGS %{optflags}";
 %global _mpich_unload \
- module unload gnu-mpich;
+ MODULEPATH=/usr/share/modules module unload gnu-mpich;
 %endif
 
 %global python3_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
