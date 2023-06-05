@@ -6,14 +6,20 @@
 %endif
 %endif
 
+%if (0%{?rhel} && 0%{?rhel} < 9) || (0%{?sle_version} && 0%{?sle_version} < 150400)
+%{warn: building for py2 because %{sle_version}}
+%global with_python2 1
+%else
+%global with_python2 0
+%endif
 %global with_python3 1
 %if (0%{?suse_version} >= 1500)
 %global python3_pkgversion 3
 %global _mpich_load \
- module load gnu-mpich; \
+ MODULEPATH=/usr/share/modules module load gnu-mpich; \
  export CFLAGS="$CFLAGS %{optflags}";
 %global _mpich_unload \
- module unload gnu-mpich;
+ MODULEPATH=/usr/share/modules module unload gnu-mpich;
 %endif
 
 %global python3_runtime python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
@@ -42,7 +48,7 @@
 
 Name:           mpi4py
 Version:        3.0.3
-Release:        3%{?commit:.git%{shortcommit}}%{?dist}
+Release:        4%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -56,19 +62,24 @@ Source0:        https://bitbucket.org/mpi4py/mpi4py/downloads/mpi4py-%{version}.
 # See also #1105902.
 Patch1:         mpi4py-2.0.0-openmpi-threading.patch
 
+%if 0%{?with_python2}
 BuildRequires:  python2-devel
+%endif
 %if (0%{?suse_version} >= 1500)
 BuildRequires: lua-lmod
 %else
 BuildRequires: environment-modules
 %endif
 BuildRequires:  ed
+%if 0%{?with_python2}
 %if 0%{?rhel} && 0%{?rhel} <= 7
 BuildRequires:  Cython
 %else
 BuildRequires:  python2-Cython >= 0.22
 %endif
+%endif
 %if 0%{?with_python3}
+BuildRequires:  python3-rpm-macros
 BuildRequires:  python%{python3_pkgversion}-devel
 BuildRequires:  python%{python3_pkgversion}-Cython >= 0.22
 %endif
@@ -83,6 +94,7 @@ object as well as optimized communications of Python object exposing the
 single-segment buffer interface (NumPy arrays, built-in bytes/string/array
 objects).
 
+%if 0%{?with_python2}
 %package -n python2-mpi4py
 Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python 2 bindings of the Message Passing Interface (MPI)
@@ -95,6 +107,7 @@ bindings. It supports point-to-point (sends, receives) and collective
 object as well as optimized communications of Python object exposing the
 single-segment buffer interface (NumPy arrays, built-in bytes/string/array
 objects).
+%endif
 
 %package docs
 Summary:        Documentation for %{name}
@@ -170,23 +183,24 @@ Requires:       %{name}-common = %{version}-%{release}
 %description common
 This package contains the license file shard between the subpackages of %{name}.
 
+%if 0%{?with_python2}
 %package -n python2-mpi4py-tests
 Summary:        Python 2 tests for mpi4py packages
-BuildArch:      noarch
 Requires:       %{python2_runtime}
 Provides:       %{name}-tests = %{version}-%{release}
 Obsoletes:      %{name}-tests < %{version}-%{release}
 %description -n python2-mpi4py-tests
 This package contains the Python 2 tests for %{name}.
+%endif
 
 %package -n python%{python3_pkgversion}-mpi4py-tests
 Summary:        Python 3 tests for mpi4py packages
-BuildArch:      noarch
 Requires:       %{python3_runtime}
 %description -n python%{python3_pkgversion}-mpi4py-tests
 This package contains the Python 3 tests for %{name}.
 
 %if %{with_openmpi}
+%if 0%{?with_python2}
 %package -n python2-mpi4py-openmpi
 BuildRequires:  openmpi-devel
 Requires:       %{name}-common = %{version}-%{release}
@@ -208,9 +222,11 @@ objects).
 
 This package contains %{name} compiled against Open MPI.
 %endif
+%endif
 
 
 %if %{with_mpich}
+%if 0%{?with_python2}
 %package -n python2-mpi4py-mpich
 BuildRequires:  mpich-devel
 Requires:       %{name}-common = %{version}-%{release}
@@ -235,6 +251,7 @@ objects).
 
 This package contains %{name} compiled against MPICH.
 %endif
+%endif
 
 
 %prep
@@ -250,7 +267,7 @@ done
 
 # Save current src/__init__.py for mpich
 cp src/mpi4py/__init__.py .__init__mpich.py
-%patch1 -p1
+%patch -P 1 -p1
 cp src/mpi4py/__init__.py .__init__openmpi.py
 
 
@@ -259,6 +276,7 @@ cp src/mpi4py/__init__.py .__init__openmpi.py
 export CC=mpicc
 export CXX=mpicxx
 
+%if 0%{?with_python2}
 %if %{with_openmpi}
 # Build OpenMPI version
 %{_openmpi_load}
@@ -276,17 +294,18 @@ cp .__init__mpich.py src/mpi4py/__init__.py
 mv build mpich
 %{_mpich_unload}
 %endif
+%endif
 
 %if 0%{?with_python3}
 # Build parallel versions: set compiler variables to MPI wrappers
-export CC=mpicc
-export CXX=mpicxx
 
 %if %{with_openmpi}
 # Build OpenMPI version
 %{_openmpi_load}
 cp .__init__openmpi.py src/mpi4py/__init__.py
+%if 0%{?with_python2}
 mv openmpi build
+%endif
 %py3_build
 mv build openmpi
 %{_openmpi_unload}
@@ -296,7 +315,9 @@ mv build openmpi
 # Build mpich version
 %{_mpich_load}
 cp .__init__mpich.py src/mpi4py/__init__.py
+%if 0%{?with_python2}
 mv mpich build
+%endif
 %py3_build
 mv build mpich
 %{_mpich_unload}
@@ -306,6 +327,9 @@ mv build mpich
 
 
 %install
+site_arches=()
+%if 0%{?with_python2}
+site_arches+=(%{python2_sitearch})
 %if %{with_openmpi}
 # Install OpenMPI version
 %{_openmpi_load}
@@ -329,9 +353,11 @@ mv %{buildroot}%{python2_sitearch}/%{name}/ %{buildroot}%{python2_sitearch}/%{na
 mv build mpich
 %{_mpich_unload}
 %endif
+%endif
 
 
 %if 0%{?with_python3}
+site_arches+=(%{python3_sitearch})
 %if %{with_openmpi}
 # Install OpenMPI version
 %{_openmpi_load}
@@ -355,10 +381,14 @@ mv %{buildroot}%{python3_sitearch}/%{name}/ %{buildroot}%{python3_sitearch}/%{na
 mv build mpich
 %{_mpich_unload}
 %endif
+%endif
 
-for py_site_arch in %{python2_sitearch} %{python3_sitearch}; do
+# For SUSE:
+%{!?python3:%global python3 %{_bindir}/%{python_for_executables}}
+for py_site_arch in "${site_arches[@]}"; do
     mkdir -p %{buildroot}/$py_site_arch/%{name}/tests
     install -m 0755 test/test_io.py %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
+    sed -i -e '1i#!%{python3}' %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
     for file in mpiunittest arrayimpl; do
         install -m 0644 test/$file.py %{buildroot}/$py_site_arch/%{name}/tests/
     done
@@ -379,10 +409,13 @@ import uuid
 wq
 EOF
 done
-%endif
+
+# Change /usr/bin/{env ,}bash to resolve env-script-interpreter rpmlint error.
+sed -i -e '1s/env //' demo/python-config
 
 
 %check
+%if 0%{?with_python2}
 %if %{with_openmpi}
 # test openmpi?
 %if 0%{?OPENMPI}
@@ -418,6 +451,7 @@ PYTHONPATH=%{buildroot}%{python2_sitearch}/mpich \
 %endif
 mv build mpich
 %{_mpich_unload}
+%endif
 %endif
 %endif
 
@@ -466,12 +500,15 @@ mv build mpich
 %license LICENSE.rst
 %doc CHANGES.rst DESCRIPTION.rst README.rst
 
+%if 0%{?with_python2}
 %files -n python2-mpi4py-tests
 %{python2_sitearch}/%{name}/tests
+%endif
 
 %files -n python%{python3_pkgversion}-mpi4py-tests
 %{python3_sitearch}/%{name}/tests
 
+%if 0%{?with_python2}
 %if %{with_openmpi}
 %files -n python2-mpi4py-openmpi
 %{python2_sitearch}/openmpi/%{name}-*.egg-info
@@ -482,6 +519,7 @@ mv build mpich
 %files -n python2-mpi4py-mpich
 %{python2_sitearch}/mpich/%{name}-*.egg-info
 %{python2_sitearch}/mpich/%{name}
+%endif
 %endif
 
 %if 0%{?with_python3}
@@ -503,6 +541,11 @@ mv build mpich
 
 
 %changelog
+* Mon Jun 05 2023 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-4
+- Disable python2 build on EL9 and Leap 15.4
+- Fix shebang for tests/test_io_daos.py and docs/demo/python-config
+- Fix up MODULEPATH for Leap 15.4
+
 * Tue Oct 12 2021 Mohamad Chaarawi <mohamad.chaarawi@intel.com> - 3.0.3-3
 - update patch for DAOS test to remove temp dir
 
@@ -520,7 +563,7 @@ mv build mpich
 - Build on Leap 15.1
 
 * Sun Dec 29 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-3
-- Add Provides: %{name}-cart-%{cart_major}-daos-%{daos_major}
+- Add Provides: %%{name}-cart-%%{cart_major}-daos-%%{daos_major}
 
 * Fri Sep 06 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.0.1-2
 - Disable openmpi build
