@@ -6,7 +6,7 @@
 %endif
 %endif
 
-%if (0%{?rhel} && 0%{?rhel} < 9) || (0%{?sle_version} && 0%{?sle_version} < 150400)
+%if 0%{?sle_version} && 0%{?sle_version} < 150400
 %{warn: building for py2 because %{sle_version}}
 %global with_python2 1
 %else
@@ -47,8 +47,8 @@
 %{?commit:%global shortcommit %(c=%{commit}; echo ${c:0:12})}
 
 Name:           mpi4py
-Version:        3.0.3
-Release:        4%{?commit:.git%{shortcommit}}%{?dist}
+Version:        3.1.6
+Release:        1%{?commit:.git%{shortcommit}}%{?dist}
 Summary:        Python bindings of the Message Passing Interface (MPI)
 
 License:        BSD
@@ -56,11 +56,8 @@ URL:            https://mpi4py.readthedocs.io/en/stable/
 %if %{defined commit}
 Source0:        https://bitbucket.org/mpi4py/mpi4py/get/%{commit}.tar.gz#/%{name}-%{shortcommit}.tar.gz
 %else
-Source0:        https://bitbucket.org/mpi4py/mpi4py/downloads/mpi4py-%{version}.tar.gz
+Source0:        https://github.com/mpi4py/mpi4py/archive/%{version}/%{name}-%{version}.tar.gz
 %endif
-# openmpi at fedora is build without threads. Use that default here too.
-# See also #1105902.
-Patch1:         mpi4py-2.0.0-openmpi-threading.patch
 
 %if 0%{?with_python2}
 BuildRequires:  python2-devel
@@ -81,32 +78,33 @@ BuildRequires:  python2-Cython >= 0.22
 %if 0%{?with_python3}
 BuildRequires:  python3-rpm-macros
 BuildRequires:  python%{python3_pkgversion}-devel
+BuildRequires:  python%{python3_pkgversion}-setuptools
 BuildRequires:  python%{python3_pkgversion}-Cython >= 0.22
 %endif
+BuildRequires:  python%{python3_pkgversion}-numpy
+BuildRequires:  python%{python3_pkgversion}-simplejson
+%if 0%{?rhel}
+BuildRequires:  python%{python3_pkgversion}-yaml
+%endif
+BuildRequires:  python%{python3_pkgversion}-dill
 
-
-%description
+%global _description %{expand:
 This package is constructed on top of the MPI-1/MPI-2 specification and
 provides an object oriented interface which closely follows MPI-2 C++
 bindings. It supports point-to-point (sends, receives) and collective
 (broadcasts, scatters, gathers) communications of any picklable Python
 object as well as optimized communications of Python object exposing the
 single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+objects).}
+
+%description %_description
 
 %if 0%{?with_python2}
 %package -n python2-mpi4py
 Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python 2 bindings of the Message Passing Interface (MPI)
 %{?python_provide:%python_provide python2-mpi4py}
-%description -n python2-mpi4py
-This package is constructed on top of the MPI-1/MPI-2 specification and
-provides an object oriented interface which closely follows MPI-2 C++
-bindings. It supports point-to-point (sends, receives) and collective
-(broadcasts, scatters, gathers) communications of any picklable Python
-object as well as optimized communications of Python object exposing the
-single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+%description -n python2-mpi4py %_description
 %endif
 
 %package docs
@@ -121,14 +119,7 @@ This package contains the documentation and examples for %{name}.
 Requires:       %{name}-common = %{version}-%{release}
 Summary:        Python %{python3_version} bindings of the Message Passing Interface (MPI)
 %{?python_provide:%python_provide python%{python3_pkgversion}-mpi4py}
-%description -n python%{python3_pkgversion}-mpi4py
-This package is constructed on top of the MPI-1/MPI-2 specification and
-provides an object oriented interface which closely follows MPI-2 C++
-bindings. It supports point-to-point (sends, receives) and collective
-(broadcasts, scatters, gathers) communications of any picklable Python
-object as well as optimized communications of Python object exposing the
-single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+%description -n python%{python3_pkgversion}-mpi4py %_description
 
 %if %{with_openmpi}
 %package -n python%{python3_pkgversion}-mpi4py-openmpi
@@ -138,14 +129,7 @@ Requires:       python%{python3_pkgversion}-openmpi%{?_isa}
 Summary:        Python %{python3_version} bindings of MPI, Open MPI version
 Provides:       python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{release}
 %{?python_provide:%python_provide python%{python3_pkgversion}-mpi4py-openmpi}
-%description -n python%{python3_pkgversion}-mpi4py-openmpi
-This package is constructed on top of the MPI-1/MPI-2 specification and
-provides an object oriented interface which closely follows MPI-2 C++
-bindings. It supports point-to-point (sends, receives) and collective
-(broadcasts, scatters, gathers) communications of any picklable Python
-object as well as optimized communications of Python object exposing the
-single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+%description -n python%{python3_pkgversion}-mpi4py-openmpi %_description
 
 This package contains %{name} compiled against Open MPI.
 %endif
@@ -163,14 +147,7 @@ Provides:       python%{python3_pkgversion}-mpi4py-runtime = %{version}-%{releas
 Provides:       python%{python3_pkgversion}-%{name}-mpich2 = %{version}-%{release}
 Obsoletes:      python%{python3_pkgversion}-%{name}-mpich2 < 1.3-8
 %{?python_provide:%python_provide python%{python3_pkgversion}-mpi4py-mpich}
-%description -n python%{python3_pkgversion}-mpi4py-mpich
-This package is constructed on top of the MPI-1/MPI-2 specification and
-provides an object oriented interface which closely follows MPI-2 C++
-bindings. It supports point-to-point (sends, receives) and collective
-(broadcasts, scatters, gathers) communications of any picklable Python
-object as well as optimized communications of Python object exposing the
-single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+%description -n python%{python3_pkgversion}-mpi4py-mpich %_description
 
 This package contains %{name} compiled against MPICH.
 %endif
@@ -189,6 +166,7 @@ Summary:        Python 2 tests for mpi4py packages
 Requires:       %{python2_runtime}
 Provides:       %{name}-tests = %{version}-%{release}
 Obsoletes:      %{name}-tests < %{version}-%{release}
+BuildArch:      noarch
 %description -n python2-mpi4py-tests
 This package contains the Python 2 tests for %{name}.
 %endif
@@ -196,6 +174,7 @@ This package contains the Python 2 tests for %{name}.
 %package -n python%{python3_pkgversion}-mpi4py-tests
 Summary:        Python 3 tests for mpi4py packages
 Requires:       %{python3_runtime}
+BuildArch:      noarch
 %description -n python%{python3_pkgversion}-mpi4py-tests
 This package contains the Python 3 tests for %{name}.
 
@@ -211,14 +190,7 @@ Provides:       mpi4py-runtime = %{version}-%{release}
 Provides:       mpi4py-openmpi = %{version}-%{release}
 Obsoletes:      mpi4py-openmpi < 1.3.1-16
 %{?python_provide:%python_provide python2-mpi4py-openmpi}
-%description -n python2-mpi4py-openmpi
-This package is constructed on top of the MPI-1/MPI-2 specification and
-provides an object oriented interface which closely follows MPI-2 C++
-bindings. It supports point-to-point (sends, receives) and collective
-(broadcasts, scatters, gathers) communications of any picklable Python
-object as well as optimized communications of Python object exposing the
-single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+%description -n python2-mpi4py-openmpi %_description
 
 This package contains %{name} compiled against Open MPI.
 %endif
@@ -240,14 +212,7 @@ Obsoletes:      %{name}-mpich2 < 1.3-8
 Provides:       mpi4py-mpich = %{version}-%{release}
 Obsoletes:      mpi4py-mpich < 1.3.1-16
 %{?python_provide:%python_provide python2-mpi4py-mpich}
-%description -n python2-mpi4py-mpich
-This package is constructed on top of the MPI-1/MPI-2 specification and
-provides an object oriented interface which closely follows MPI-2 C++
-bindings. It supports point-to-point (sends, receives) and collective
-(broadcasts, scatters, gathers) communications of any picklable Python
-object as well as optimized communications of Python object exposing the
-single-segment buffer interface (NumPy arrays, built-in bytes/string/array
-objects).
+%description -n python2-mpi4py-mpich %_description
 
 This package contains %{name} compiled against MPICH.
 %endif
@@ -267,9 +232,11 @@ done
 
 # Save current src/__init__.py for mpich
 cp src/mpi4py/__init__.py .__init__mpich.py
-%patch -P 1 -p1
 cp src/mpi4py/__init__.py .__init__openmpi.py
 
+# Remove precythonized C sources
+#rm $(grep -rl '/\* Generated by Cython')
+python3 conf/cythonize.py
 
 %build
 # Build parallel versions: set compiler variables to MPI wrappers
@@ -280,6 +247,7 @@ export CXX=mpicxx
 %if %{with_openmpi}
 # Build OpenMPI version
 %{_openmpi_load}
+ompi_info
 cp .__init__openmpi.py src/mpi4py/__init__.py
 %py2_build
 mv build openmpi
@@ -302,6 +270,7 @@ mv build mpich
 %if %{with_openmpi}
 # Build OpenMPI version
 %{_openmpi_load}
+ompi_info
 cp .__init__openmpi.py src/mpi4py/__init__.py
 %if 0%{?with_python2}
 mv openmpi build
@@ -386,13 +355,14 @@ mv build mpich
 # For SUSE:
 %{!?python3:%global python3 %{_bindir}/%{python_for_executables}}
 for py_site_arch in "${site_arches[@]}"; do
-    mkdir -p %{buildroot}/$py_site_arch/%{name}/tests
-    install -m 0755 test/test_io.py %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
-    sed -i -e '1i#!%{python3}' %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
+    mkdir -p %{buildroot}/%{_bindir}/
+    install -m 0755 test/test_io.py %{buildroot}/%{_bindir}/test_io_daos.py
+    sed -i -e '1i#!%{python3}' %{buildroot}/%{_bindir}/test_io_daos.py
     for file in mpiunittest arrayimpl; do
-        install -m 0644 test/$file.py %{buildroot}/$py_site_arch/%{name}/tests/
+        install -m 0755 test/$file.py %{buildroot}/%{_bindir}/
+        sed -i -e '1i#!%{python3}' %{buildroot}/%{_bindir}/$file.py
     done
-    ed <<EOF %{buildroot}/$py_site_arch/%{name}/tests/test_io_daos.py
+    ed <<EOF %{buildroot}/%{_bindir}/test_io_daos.py
 /^import arrayimpl/a
 import uuid
 .
@@ -502,22 +472,30 @@ mv build mpich
 
 %if 0%{?with_python2}
 %files -n python2-mpi4py-tests
-%{python2_sitearch}/%{name}/tests
+%doc CHANGES.rst DESCRIPTION.rst README.rst
+%{_bindir}/*
 %endif
 
 %files -n python%{python3_pkgversion}-mpi4py-tests
-%{python3_sitearch}/%{name}/tests
+%doc CHANGES.rst DESCRIPTION.rst README.rst
+%{_bindir}/*
 
 %if 0%{?with_python2}
 %if %{with_openmpi}
 %files -n python2-mpi4py-openmpi
+%doc CHANGES.rst DESCRIPTION.rst README.rst
 %{python2_sitearch}/openmpi/%{name}-*.egg-info
+%attr(644,root,root) %{python2_sitearch}/openmpi/%{name}/*.so
+%attr(644,root,root) %{python2_sitearch}/openmpi/%{name}/lib-pmpi/*.so
 %{python2_sitearch}/openmpi/%{name}
 %endif
 
 %if %{with_mpich}
 %files -n python2-mpi4py-mpich
+%doc CHANGES.rst DESCRIPTION.rst README.rst
 %{python2_sitearch}/mpich/%{name}-*.egg-info
+%attr(644,root,root) %{python2_sitearch}/mpich/%{name}/*.so
+%attr(644,root,root) %{python2_sitearch}/mpich/%{name}/lib-pmpi/*.so
 %{python2_sitearch}/mpich/%{name}
 %endif
 %endif
@@ -525,13 +503,19 @@ mv build mpich
 %if 0%{?with_python3}
 %if %{with_openmpi}
 %files -n python%{python3_pkgversion}-mpi4py-openmpi
+%doc CHANGES.rst DESCRIPTION.rst README.rst
 %{python3_sitearch}/openmpi/%{name}-*.egg-info
+%attr(644,root,root) %{python3_sitearch}/openmpi/%{name}/*.so
+%attr(644,root,root) %{python3_sitearch}/openmpi/%{name}/lib-pmpi/*.so
 %{python3_sitearch}/openmpi/%{name}
 %endif
 
 %if %{with_mpich}
 %files -n python%{python3_pkgversion}-mpi4py-mpich
+%doc CHANGES.rst DESCRIPTION.rst README.rst
 %{python3_sitearch}/mpich/%{name}-*.egg-info
+%attr(644,root,root) %{python3_sitearch}/mpich/%{name}/*.so
+%attr(644,root,root) %{python3_sitearch}/mpich/%{name}/lib-pmpi/*.so
 %{python3_sitearch}/mpich/%{name}
 %endif
 %endif
@@ -541,6 +525,15 @@ mv build mpich
 
 
 %changelog
+* Mon Apr 15 2024 Brian J. Murrell <brian.murrell@intel.com> - 3.1.6-1
+- Update to 3.1.6
+- Move tests to %%{_bindir}
+- Don't build for Py2 on EL8 any more
+- Remove mpi4py-2.0.0-openmpi-threading.patch
+- Add rpmlinting exceptions
+- Change -tests to noarch
+- Rebase specfile on upstreams
+
 * Mon Jun 05 2023 Brian J. Murrell <brian.murrell@intel.com> - 3.0.3-4
 - Disable python2 build on EL9 and Leap 15.4
 - Fix shebang for tests/test_io_daos.py and docs/demo/python-config
