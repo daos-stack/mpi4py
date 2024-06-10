@@ -1,0 +1,28 @@
+# This line is mandatory to access the configuration functions
+from Config import *
+
+# https://github.com/rpm-software-management/rpmlint/issues/856
+addFilter('incoherent-version-in-changelog')
+
+addFilter('python3-mpi4py-tests\.noarch: W: no-manual-page-for-binary (arrayimpl|mpiunittest|test_io_daos)\.py')
+addFilter('mpi4py-docs\.noarch: W: files-duplicate \/usr\/share\/doc\/mpi4py-docs\/apiref\/index\.html \/usr\/share\/doc\/mpi4py-docs\/apiref\/frames\.html')
+addFilter('mpi4py-docs\.noarch: W: files-duplicate \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-cython\/mpi-compat\.h \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/cython\/mpi-compat\.h')
+addFilter('mpi4py-docs\.noarch: W: files-duplicate \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-swig\/test\.py \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-boost\/test\.py:\/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-c\/test\.py:\/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-cffi\/test\.py:\/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-ctypes\/test\.py')
+addFilter('mpi4py-docs\.noarch: W: files-duplicate \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-ctypes\/helloworld\.c \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-cffi\/helloworld\.c')
+addFilter('mpi4py-docs\.noarch: W: files-duplicate \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-ctypes\/makefile \/usr\/share\/doc\/(packages\/|)mpi4py-docs\/demo\/wrap-cffi\/makefile')
+addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py-[\d\.]+-py[\d\.]+\.egg-info\/not-zip-safe \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py-[\d\.]+-py[\d\.]+\.egg-info\/dependency_links\.txt')
+addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python[\d\.]+/site-packages\/mpich\/mpi4py\/futures\/server\.pyi \/usr\/lib64\/python[\d\.]+/site-packages\/mpich\/mpi4py\/futures\/__main__\.pyi')
+addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/__pycache__\/__main__\.cpython-36\.pyc \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/__pycache__\/__main__\.cpython-36\.opt-1\.pyc')
+addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/futures\/__pycache__\/__main__\.cpython-36\.pyc \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/futures\/__pycache__\/__main__\.cpython-36\.opt-1\.pyc')
+addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/futures\/__pycache__\/server\.cpython-36\.pyc \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/futures\/__pycache__\/server\.cpython-36\.opt-1\.pyc')
+addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/util\/__pycache__\/__init__\.cpython-36\.pyc \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/util\/__pycache__\/__init__\.cpython-36\.opt-1\.pyc')
+addFilter('python3-mpi4py-mpich\.x86_64: W: devel-file-in-non-devel-package \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/include\/mpi4py\/mpi4py(\.MPI(_api|)|)\.h')
+addFilter('python3-mpi4py-mpich.x86_64: W: obsolete-not-provided python39-mpi4py-mpich')
+addFilter('python3-mpi4py-tests.noarch: W: obsolete-not-provided python39-mpi4py-tests')
+# Leap 15.5:
+addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/MPI\.cpython-36m-x86_64-linux-gnu\.so')
+addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/dl\.cpython-36m-x86_64-linux-gnu\.so')
+addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/lib-pmpi\/libmpe\.so')
+addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/lib-pmpi\/libvt-hyb\.so')
+addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/lib-pmpi\/libvt-mpi\.so')
+addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/lib-pmpi\/libvt\.so')
