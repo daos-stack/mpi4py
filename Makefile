@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+# Copyright (C) 2019-2024 Intel Corporation
+
 NAME      := mpi4py
 SRC_EXT   := gz
 
