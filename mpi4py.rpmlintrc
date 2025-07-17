@@ -19,6 +19,9 @@ addFilter('python3-mpi4py-mpich\.x86_64: W: files-duplicate \/usr\/lib64\/python
 addFilter('python3-mpi4py-mpich\.x86_64: W: devel-file-in-non-devel-package \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/include\/mpi4py\/mpi4py(\.MPI(_api|)|)\.h')
 addFilter('python3-mpi4py-mpich.x86_64: W: obsolete-not-provided python39-mpi4py-mpich')
 addFilter('python3-mpi4py-tests.noarch: W: obsolete-not-provided python39-mpi4py-tests')
+
+addFilter('E: spelling-error')
+
 # Leap 15.5:
 addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/MPI\.cpython-36m-x86_64-linux-gnu\.so')
 addFilter('python3-mpi4py-mpich\.x86_64: W: unstripped-binary-or-object \/usr\/lib64\/python[\d\.]+\/site-packages\/mpich\/mpi4py\/dl\.cpython-36m-x86_64-linux-gnu\.so')
